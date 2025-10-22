@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import WalletDisplay from '@/components/WalletDisplay';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -10,6 +11,10 @@ export default function Home({ onNavigate }: HomeProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="max-w-2xl w-full">
+        <div className="flex justify-center mb-6">
+          <WalletDisplay />
+        </div>
+        
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold mb-4 tracking-tight">
             # МОРСКОЙ БОЙ

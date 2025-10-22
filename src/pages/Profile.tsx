@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useWallet } from '@/contexts/WalletContext';
 import { useState } from 'react';
 
 interface ProfileProps {
@@ -10,6 +11,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ onNavigate }: ProfileProps) {
+  const { coins } = useWallet();
   const [username, setUsername] = useState('Капитан Врунгель');
   const [email, setEmail] = useState('captain@battleship.ru');
   
@@ -41,6 +43,16 @@ export default function Profile({ onNavigate }: ProfileProps) {
         <p className="text-center text-muted-foreground mb-8 text-sm">
           ════════════════════════════════
         </p>
+        
+        <Card className="p-6 border-2 border-border mb-6 bg-secondary">
+          <div className="flex items-center justify-center gap-4">
+            <div className="text-4xl">💰</div>
+            <div>
+              <div className="text-sm text-muted-foreground font-bold">ВАШ БАЛАНС</div>
+              <div className="text-3xl font-bold">{coins.toLocaleString()} монет</div>
+            </div>
+          </div>
+        </Card>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card className="p-6 border-2 border-border">

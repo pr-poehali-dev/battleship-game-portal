@@ -1,9 +1,15 @@
 import GameBoard from '@/components/GameBoard';
 import { useGameLogic } from '@/hooks/useGameLogic';
+import { useWallet } from '@/contexts/WalletContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import Icon from '@/components/ui/icon';
+import { useEffect, useState } from 'react';
 
 export default function Game() {
+  const { coins, addCoins } = useWallet();
+  const [rewardClaimed, setRewardClaimed] = useState(false);
+  
   const {
     playerBoard,
     enemyBoard,
@@ -13,6 +19,18 @@ export default function Game() {
     makePlayerShot,
     resetGame
   } = useGameLogic();
+  
+  useEffect(() => {
+    if (gameStatus === 'won' && !rewardClaimed) {
+      addCoins(500);
+      setRewardClaimed(true);
+    }
+  }, [gameStatus, rewardClaimed, addCoins]);
+  
+  const handleResetGame = () => {
+    resetGame();
+    setRewardClaimed(false);
+  };
   
   return (
     <div className="min-h-screen bg-background p-8">
@@ -26,11 +44,17 @@ export default function Game() {
         
         <Card className="p-6 mb-6 bg-card border-2 border-border">
           <div className="flex items-center justify-between">
-            <div className="text-lg font-bold">
-              {message}
+            <div className="flex items-center gap-4">
+              <div className="text-lg font-bold">
+                {message}
+              </div>
+              <div className="flex items-center gap-2 text-sm font-bold bg-secondary px-3 py-1 rounded border-2 border-border">
+                <Icon name="Coins" size={16} />
+                {coins}
+              </div>
             </div>
             <Button 
-              onClick={resetGame}
+              onClick={handleResetGame}
               variant="destructive"
               className="font-bold"
             >
@@ -76,6 +100,10 @@ export default function Game() {
             <p className="text-center mt-2">
               Вы потопили все корабли противника!
             </p>
+            <div className="flex items-center justify-center gap-2 mt-4 text-xl font-bold">
+              <Icon name="Coins" size={24} />
+              +500 монет за победу!
+            </div>
           </Card>
         )}
         
