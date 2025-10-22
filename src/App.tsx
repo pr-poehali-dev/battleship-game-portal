@@ -1,28 +1,48 @@
 
+import { useState } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import Home from '@/pages/Home';
+import Game from '@/pages/Game';
+import Rules from '@/pages/Rules';
+import Rating from '@/pages/Rating';
+import Profile from '@/pages/Profile';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+  
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <Home onNavigate={setCurrentPage} />;
+      case 'game':
+        return <Game />;
+      case 'rules':
+        return <Rules onNavigate={setCurrentPage} />;
+      case 'rating':
+        return <Rating onNavigate={setCurrentPage} />;
+      case 'profile':
+        return <Profile onNavigate={setCurrentPage} />;
+      default:
+        return <Home onNavigate={setCurrentPage} />;
+    }
+  };
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <div className="min-h-screen">
+          {renderPage()}
+        </div>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
