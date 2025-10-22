@@ -5,11 +5,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WalletProvider } from '@/contexts/WalletContext';
+import { Web3Provider } from '@/contexts/Web3Context';
 import Home from '@/pages/Home';
 import Game from '@/pages/Game';
 import Rules from '@/pages/Rules';
 import Rating from '@/pages/Rating';
 import Profile from '@/pages/Profile';
+import Wallet from '@/pages/Wallet';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => {
         return <Rating onNavigate={setCurrentPage} />;
       case 'profile':
         return <Profile onNavigate={setCurrentPage} />;
+      case 'wallet':
+        return <Wallet onNavigate={setCurrentPage} />;
       default:
         return <Home onNavigate={setCurrentPage} />;
     }
@@ -35,15 +39,17 @@ const App = () => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <WalletProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <div className="min-h-screen">
-            {renderPage()}
-          </div>
-        </TooltipProvider>
-      </WalletProvider>
+      <Web3Provider>
+        <WalletProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <div className="min-h-screen">
+              {renderPage()}
+            </div>
+          </TooltipProvider>
+        </WalletProvider>
+      </Web3Provider>
     </QueryClientProvider>
   );
 };

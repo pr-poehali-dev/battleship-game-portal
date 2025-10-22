@@ -4,6 +4,7 @@ import Icon from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWallet } from '@/contexts/WalletContext';
+import WalletConnectButton from '@/components/WalletConnectButton';
 import { useState } from 'react';
 
 interface ProfileProps {
@@ -45,11 +46,24 @@ export default function Profile({ onNavigate }: ProfileProps) {
         </p>
         
         <Card className="p-6 border-2 border-border mb-6 bg-secondary">
-          <div className="flex items-center justify-center gap-4">
-            <div className="text-4xl">💰</div>
-            <div>
-              <div className="text-sm text-muted-foreground font-bold">ВАШ БАЛАНС</div>
-              <div className="text-3xl font-bold">{coins.toLocaleString()} монет</div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">💰</div>
+              <div>
+                <div className="text-sm text-muted-foreground font-bold">ВАШ БАЛАНС</div>
+                <div className="text-3xl font-bold">{coins.toLocaleString()} монет</div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <WalletConnectButton />
+              <Button 
+                onClick={() => onNavigate('wallet')}
+                variant="outline"
+                className="gap-2"
+              >
+                <Icon name="CreditCard" size={16} />
+                Пополнить / Вывести
+              </Button>
             </div>
           </div>
         </Card>
