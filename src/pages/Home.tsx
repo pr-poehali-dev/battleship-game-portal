@@ -36,7 +36,17 @@ export default function Home({ onNavigate }: HomeProps) {
               className="w-full text-xl py-8 font-bold"
             >
               <Icon name="Play" size={24} className="mr-2" />
-              НАЧАТЬ ИГРУ
+              ИГРА С КОМПЬЮТЕРОМ
+            </Button>
+
+            <Button 
+              onClick={() => onNavigate('online')}
+              variant="default"
+              size="lg"
+              className="w-full text-xl py-8 font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              <Icon name="Users" size={24} className="mr-2" />
+              ОНЛАЙН БОЙ
             </Button>
             
             <Button 

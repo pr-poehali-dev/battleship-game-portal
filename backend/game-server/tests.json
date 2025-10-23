@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Get server status",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "activeRooms": "number",
+        "waitingRooms": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Join game room",
+      "method": "POST",
+      "path": "/?action=join",
+      "body": {
+        "playerId": "test_player_1",
+        "playerName": "Test Player",
+        "board": []
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "roomId": "string",
+        "playerId": "string",
+        "playerIndex": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

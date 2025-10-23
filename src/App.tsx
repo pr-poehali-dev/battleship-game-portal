@@ -8,6 +8,7 @@ import { WalletProvider } from '@/contexts/WalletContext';
 import { Web3Provider } from '@/contexts/Web3Context';
 import Home from '@/pages/Home';
 import Game from '@/pages/Game';
+import OnlineGame from '@/pages/OnlineGame';
 import Rules from '@/pages/Rules';
 import Rating from '@/pages/Rating';
 import Profile from '@/pages/Profile';
@@ -24,6 +25,8 @@ const App = () => {
         return <Home onNavigate={setCurrentPage} />;
       case 'game':
         return <Game />;
+      case 'online':
+        return <OnlineGame onNavigate={setCurrentPage} />;
       case 'rules':
         return <Rules onNavigate={setCurrentPage} />;
       case 'rating':
