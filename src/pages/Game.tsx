@@ -16,6 +16,7 @@ export default function Game() {
     playerShots,
     gameStatus,
     message,
+    timeLeft,
     makePlayerShot,
     resetGame
   } = useGameLogic();
@@ -48,9 +49,19 @@ export default function Game() {
               <div className="text-lg font-bold">
                 {message}
               </div>
-              <div className="flex items-center gap-2 text-sm font-bold bg-secondary px-3 py-1 rounded border-2 border-border">
-                <Icon name="Coins" size={16} />
-                {coins}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-sm font-bold bg-secondary px-3 py-1 rounded border-2 border-border">
+                  <Icon name="Coins" size={16} />
+                  {coins}
+                </div>
+                {gameStatus === 'playing' && (
+                  <div className={`flex items-center gap-2 text-sm font-bold px-3 py-1 rounded border-2 border-border ${
+                    timeLeft <= 10 ? 'bg-destructive text-destructive-foreground' : 'bg-secondary'
+                  }`}>
+                    <Icon name="Timer" size={16} />
+                    {timeLeft}с
+                  </div>
+                )}
               </div>
             </div>
             <Button 

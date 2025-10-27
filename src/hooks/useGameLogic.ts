@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CellState } from '@/components/GameBoard';
 
 interface Ship {
@@ -44,8 +44,9 @@ const placeShip = (board: CellState[][], row: number, col: number, size: number,
   }
 };
 
-const generateRandomBoard = (): CellState[][] => {
+const generateRandomBoard = (): { board: CellState[][], ships: Ship[] } => {
   const board = createEmptyBoard();
+  const ships: Ship[] = [];
   
   for (const shipSize of SHIPS) {
     let placed = false;
@@ -57,36 +58,87 @@ const generateRandomBoard = (): CellState[][] => {
       const isHorizontal = Math.random() > 0.5;
       
       if (canPlaceShip(board, row, col, shipSize, isHorizontal)) {
+        const positions: [number, number][] = [];
+        for (let i = 0; i < shipSize; i++) {
+          const r = isHorizontal ? row : row + i;
+          const c = isHorizontal ? col + i : col;
+          positions.push([r, c]);
+        }
         placeShip(board, row, col, shipSize, isHorizontal);
+        ships.push({ size: shipSize, positions });
         placed = true;
       }
       attempts++;
     }
   }
   
-  return board;
+  return { board, ships };
 };
 
 export const useGameLogic = () => {
-  const [playerBoard, setPlayerBoard] = useState<CellState[][]>(generateRandomBoard);
-  const [enemyBoard, setEnemyBoard] = useState<CellState[][]>(generateRandomBoard);
+  const initialPlayerData = generateRandomBoard();
+  const initialEnemyData = generateRandomBoard();
+  
+  const [playerBoard, setPlayerBoard] = useState<CellState[][]>(initialPlayerData.board);
+  const [enemyBoard, setEnemyBoard] = useState<CellState[][]>(initialEnemyData.board);
+  const [enemyShips, setEnemyShips] = useState<Ship[]>(initialEnemyData.ships);
   const [playerShots, setPlayerShots] = useState<CellState[][]>(createEmptyBoard);
   const [gameStatus, setGameStatus] = useState<'setup' | 'playing' | 'won' | 'lost'>('playing');
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [message, setMessage] = useState('Ваш ход! Стреляйте по полю противника');
+  const [timeLeft, setTimeLeft] = useState(30);
+  
+  const markAroundSunkShip = (shots: CellState[][], ship: Ship) => {
+    const newShots = shots.map(r => [...r]);
+    
+    ship.positions.forEach(([r, c]) => {
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr;
+          const nc = c + dc;
+          if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+            if (newShots[nr][nc] === 'empty') {
+              newShots[nr][nc] = 'miss';
+            }
+          }
+        }
+      }
+    });
+    
+    return newShots;
+  };
   
   const makePlayerShot = useCallback((row: number, col: number) => {
     if (!isPlayerTurn || gameStatus !== 'playing') return;
     if (playerShots[row][col] !== 'empty') return;
     
+    setTimeLeft(30);
+    
     const newPlayerShots = playerShots.map(r => [...r]);
     const isHit = enemyBoard[row][col] === 'ship';
     
     newPlayerShots[row][col] = isHit ? 'hit' : 'miss';
-    setPlayerShots(newPlayerShots);
     
     if (isHit) {
-      setMessage('Попадание! Стреляйте еще раз!');
+      const hitShip = enemyShips.find(ship => 
+        ship.positions.some(([r, c]) => r === row && c === col)
+      );
+      
+      if (hitShip) {
+        const isShipSunk = hitShip.positions.every(([r, c]) => newPlayerShots[r][c] === 'hit');
+        
+        if (isShipSunk) {
+          const shotsWithMarks = markAroundSunkShip(newPlayerShots, hitShip);
+          setPlayerShots(shotsWithMarks);
+          setMessage('Убил! Стреляйте еще раз!');
+        } else {
+          setPlayerShots(newPlayerShots);
+          setMessage('Попадание! Стреляйте еще раз!');
+        }
+      } else {
+        setPlayerShots(newPlayerShots);
+        setMessage('Попадание! Стреляйте еще раз!');
+      }
       
       const allShipsSunk = enemyBoard.every((row, r) =>
         row.every((cell, c) => cell !== 'ship' || newPlayerShots[r][c] === 'hit')
@@ -97,11 +149,12 @@ export const useGameLogic = () => {
         setMessage('Победа! Вы потопили все корабли противника!');
       }
     } else {
+      setPlayerShots(newPlayerShots);
       setMessage('Промах! Ход противника...');
       setIsPlayerTurn(false);
       setTimeout(makeEnemyShot, 1000);
     }
-  }, [isPlayerTurn, gameStatus, playerShots, enemyBoard]);
+  }, [isPlayerTurn, gameStatus, playerShots, enemyBoard, enemyShips]);
   
   const makeEnemyShot = useCallback(() => {
     const newEnemyBoard = playerBoard.map(r => [...r]);
@@ -136,13 +189,36 @@ export const useGameLogic = () => {
   }, [playerBoard]);
   
   const resetGame = useCallback(() => {
-    setPlayerBoard(generateRandomBoard());
-    setEnemyBoard(generateRandomBoard());
+    const newPlayerData = generateRandomBoard();
+    const newEnemyData = generateRandomBoard();
+    
+    setPlayerBoard(newPlayerData.board);
+    setEnemyBoard(newEnemyData.board);
+    setEnemyShips(newEnemyData.ships);
     setPlayerShots(createEmptyBoard());
     setGameStatus('playing');
     setIsPlayerTurn(true);
     setMessage('Ваш ход! Стреляйте по полю противника');
-  }, []);
+    setTimeLeft(30);
+  }, []);  
+  
+  useEffect(() => {
+    if (!isPlayerTurn || gameStatus !== 'playing') return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setMessage('Время вышло! Ход противника...');
+          setIsPlayerTurn(false);
+          setTimeout(makeEnemyShot, 1000);
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [isPlayerTurn, gameStatus, makeEnemyShot]);
   
   return {
     playerBoard,
@@ -151,6 +227,7 @@ export const useGameLogic = () => {
     gameStatus,
     isPlayerTurn,
     message,
+    timeLeft,
     makePlayerShot,
     resetGame
   };
