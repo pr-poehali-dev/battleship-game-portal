@@ -75,8 +75,52 @@ const generateRandomBoard = (): { board: CellState[][], ships: Ship[] } => {
   return { board, ships };
 };
 
-export const useGameLogic = () => {
-  const initialPlayerData = generateRandomBoard();
+const extractShipsFromBoard = (board: CellState[][]): Ship[] => {
+  const ships: Ship[] = [];
+  const visited = new Set<string>();
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] === 'ship' && !visited.has(`${r},${c}`)) {
+        const positions: [number, number][] = [];
+        const isHorizontal = c + 1 < BOARD_SIZE && board[r][c + 1] === 'ship';
+        
+        let size = 0;
+        while (true) {
+          const nr = isHorizontal ? r : r + size;
+          const nc = isHorizontal ? c + size : c;
+          
+          if (nr >= BOARD_SIZE || nc >= BOARD_SIZE || board[nr][nc] !== 'ship') break;
+          
+          positions.push([nr, nc]);
+          visited.add(`${nr},${nc}`);
+          size++;
+        }
+        
+        ships.push({ size, positions });
+      }
+    }
+  }
+  
+  return ships;
+};
+
+interface GameLogicProps {
+  customPlayerBoard?: CellState[][];
+}
+
+export const useGameLogic = (props?: GameLogicProps) => {
+  const getInitialPlayerData = () => {
+    if (props?.customPlayerBoard) {
+      return {
+        board: props.customPlayerBoard.map(row => [...row]),
+        ships: extractShipsFromBoard(props.customPlayerBoard),
+      };
+    }
+    return generateRandomBoard();
+  };
+
+  const initialPlayerData = getInitialPlayerData();
   const initialEnemyData = generateRandomBoard();
   
   const [playerBoard, setPlayerBoard] = useState<CellState[][]>(initialPlayerData.board);
@@ -188,8 +232,10 @@ export const useGameLogic = () => {
     }
   }, [playerBoard]);
   
-  const resetGame = useCallback(() => {
-    const newPlayerData = generateRandomBoard();
+  const resetGame = useCallback((customBoard?: CellState[][]) => {
+    const newPlayerData = customBoard 
+      ? { board: customBoard.map(r => [...r]), ships: extractShipsFromBoard(customBoard) }
+      : generateRandomBoard();
     const newEnemyData = generateRandomBoard();
     
     setPlayerBoard(newPlayerData.board);

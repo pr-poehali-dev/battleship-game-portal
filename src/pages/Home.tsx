@@ -78,6 +78,16 @@ export default function Home({ onNavigate }: HomeProps) {
               <Icon name="User" size={20} className="mr-2" />
               ПРОФИЛЬ
             </Button>
+            
+            <Button 
+              onClick={() => onNavigate('ship-setup')}
+              variant="outline"
+              size="lg"
+              className="w-full text-lg py-6 font-bold"
+            >
+              <Icon name="Ship" size={20} className="mr-2" />
+              РАССТАНОВКА КОРАБЛЕЙ
+            </Button>
           </div>
         </Card>
         

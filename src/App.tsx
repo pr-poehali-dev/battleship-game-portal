@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WalletProvider } from '@/contexts/WalletContext';
 import { Web3Provider } from '@/contexts/Web3Context';
+import { ShipLayoutProvider } from '@/contexts/ShipLayoutContext';
 import Home from '@/pages/Home';
 import Game from '@/pages/Game';
 import OnlineGame from '@/pages/OnlineGame';
@@ -13,6 +14,7 @@ import Rules from '@/pages/Rules';
 import Rating from '@/pages/Rating';
 import Profile from '@/pages/Profile';
 import Wallet from '@/pages/Wallet';
+import ShipSetup from '@/pages/ShipSetup';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => {
         return <Profile onNavigate={setCurrentPage} />;
       case 'wallet':
         return <Wallet onNavigate={setCurrentPage} />;
+      case 'ship-setup':
+        return <ShipSetup onNavigate={setCurrentPage} />;
       default:
         return <Home onNavigate={setCurrentPage} />;
     }
@@ -44,13 +48,15 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <Web3Provider>
         <WalletProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <div className="min-h-screen">
-              {renderPage()}
-            </div>
-          </TooltipProvider>
+          <ShipLayoutProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <div className="min-h-screen">
+                {renderPage()}
+              </div>
+            </TooltipProvider>
+          </ShipLayoutProvider>
         </WalletProvider>
       </Web3Provider>
     </QueryClientProvider>

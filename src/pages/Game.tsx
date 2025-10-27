@@ -1,6 +1,7 @@
 import GameBoard from '@/components/GameBoard';
 import { useGameLogic } from '@/hooks/useGameLogic';
 import { useWallet } from '@/contexts/WalletContext';
+import { useShipLayout } from '@/contexts/ShipLayoutContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
@@ -8,8 +9,10 @@ import { useEffect, useState } from 'react';
 
 export default function Game() {
   const { coins, addCoins } = useWallet();
+  const { getSelectedLayout } = useShipLayout();
   const [rewardClaimed, setRewardClaimed] = useState(false);
   
+  const customBoard = getSelectedLayout();
   const {
     playerBoard,
     enemyBoard,
@@ -19,7 +22,7 @@ export default function Game() {
     timeLeft,
     makePlayerShot,
     resetGame
-  } = useGameLogic();
+  } = useGameLogic({ customPlayerBoard: customBoard || undefined });
   
   useEffect(() => {
     if (gameStatus === 'won' && !rewardClaimed) {
@@ -29,7 +32,8 @@ export default function Game() {
   }, [gameStatus, rewardClaimed, addCoins]);
   
   const handleResetGame = () => {
-    resetGame();
+    const layout = getSelectedLayout();
+    resetGame(layout || undefined);
     setRewardClaimed(false);
   };
   
