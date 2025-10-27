@@ -4,6 +4,7 @@ interface WalletContextType {
   coins: number;
   addCoins: (amount: number) => void;
   spendCoins: (amount: number) => boolean;
+  removeCoins: (amount: number) => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -30,8 +31,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
+  const removeCoins = (amount: number) => {
+    setCoins(prev => Math.max(0, prev - amount));
+  };
+
   return (
-    <WalletContext.Provider value={{ coins, addCoins, spendCoins }}>
+    <WalletContext.Provider value={{ coins, addCoins, spendCoins, removeCoins }}>
       {children}
     </WalletContext.Provider>
   );

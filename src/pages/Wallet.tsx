@@ -18,13 +18,18 @@ export default function Wallet({ onNavigate }: WalletProps) {
   const { account, balance, isConnected } = useWeb3();
   const { toast } = useToast();
   
-  const [depositAmount, setDepositAmount] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const EXCHANGE_RATE = 10000;
+  const COIN_PACKAGES = [
+    { coins: 10000, price: 0.001, label: 'Стартовый', icon: '🥉' },
+    { coins: 50000, price: 0.0045, label: 'Базовый', icon: '🥈', bonus: '+10%' },
+    { coins: 100000, price: 0.008, label: 'Премиум', icon: '🥇', bonus: '+20%' },
+    { coins: 500000, price: 0.035, label: 'Элитный', icon: '💎', bonus: '+30%' },
+  ];
 
-  const handleDeposit = async () => {
+  const handleBuyPackage = async (pkg: typeof COIN_PACKAGES[0]) => {
     if (!isConnected) {
       toast({
         title: 'Ошибка',
@@ -34,17 +39,7 @@ export default function Wallet({ onNavigate }: WalletProps) {
       return;
     }
 
-    const ethAmount = parseFloat(depositAmount);
-    if (isNaN(ethAmount) || ethAmount <= 0) {
-      toast({
-        title: 'Ошибка',
-        description: 'Введите корректную сумму',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (balance && parseFloat(balance) < ethAmount) {
+    if (balance && parseFloat(balance) < pkg.price) {
       toast({
         title: 'Недостаточно средств',
         description: 'На вашем кошельке недостаточно ETH',
@@ -54,16 +49,17 @@ export default function Wallet({ onNavigate }: WalletProps) {
     }
 
     setIsProcessing(true);
+    setSelectedPackage(pkg.coins);
+    
     try {
-      const coinsToAdd = Math.floor(ethAmount * EXCHANGE_RATE);
-      addCoins(coinsToAdd);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      addCoins(pkg.coins);
       
       toast({
-        title: 'Успешно!',
-        description: `Пополнено ${coinsToAdd.toLocaleString()} монет`,
+        title: 'Покупка успешна! 🎉',
+        description: `Вы получили ${pkg.coins.toLocaleString()} монет${pkg.bonus ? ' ' + pkg.bonus : ''}`,
       });
-      
-      setDepositAmount('');
     } catch (error) {
       toast({
         title: 'Ошибка',
@@ -72,6 +68,7 @@ export default function Wallet({ onNavigate }: WalletProps) {
       });
     } finally {
       setIsProcessing(false);
+      setSelectedPackage(null);
     }
   };
 
@@ -95,6 +92,15 @@ export default function Wallet({ onNavigate }: WalletProps) {
       return;
     }
 
+    if (coinsAmount < 10000) {
+      toast({
+        title: 'Минимальный вывод',
+        description: 'Минимальная сумма для вывода - 10,000 монет',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (coins < coinsAmount) {
       toast({
         title: 'Недостаточно средств',
@@ -106,12 +112,14 @@ export default function Wallet({ onNavigate }: WalletProps) {
 
     setIsProcessing(true);
     try {
-      const ethAmount = coinsAmount / EXCHANGE_RATE;
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const ethAmount = coinsAmount / 10000;
       removeCoins(coinsAmount);
       
       toast({
-        title: 'Успешно!',
-        description: `Выведено ${ethAmount.toFixed(6)} ETH`,
+        title: 'Вывод успешен! 💸',
+        description: `Выведено ${ethAmount.toFixed(6)} ETH на ваш кошелёк`,
       });
       
       setWithdrawAmount('');
@@ -181,51 +189,63 @@ export default function Wallet({ onNavigate }: WalletProps) {
               </div>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-6 border-2 border-border">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <Icon name="ArrowDownCircle" size={24} />
-                  ПОПОЛНИТЬ
-                </h2>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="deposit" className="font-bold">
-                      Сумма в ETH
-                    </Label>
-                    <Input 
-                      id="deposit"
-                      type="number"
-                      step="0.0001"
-                      placeholder="0.001"
-                      value={depositAmount}
-                      onChange={(e) => setDepositAmount(e.target.value)}
-                      className="mt-2 font-bold border-2"
-                    />
-                    {depositAmount && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        ≈ {(parseFloat(depositAmount) * EXCHANGE_RATE).toLocaleString()} монет
-                      </p>
-                    )}
-                  </div>
-                  <div className="bg-muted p-3 rounded text-sm border-2 border-border">
-                    <div className="font-bold mb-1">Курс обмена:</div>
-                    <div>1 ETH = {EXCHANGE_RATE.toLocaleString()} монет</div>
-                  </div>
-                  <Button 
-                    onClick={handleDeposit}
-                    disabled={isProcessing || !depositAmount}
-                    variant="default"
-                    className="w-full font-bold"
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+                <Icon name="ShoppingCart" size={28} />
+                КУПИТЬ МОНЕТЫ
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {COIN_PACKAGES.map((pkg) => (
+                  <Card 
+                    key={pkg.coins}
+                    className={`p-6 border-2 transition-all hover:shadow-lg ${
+                      pkg.bonus ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20' : 'border-border'
+                    }`}
                   >
-                    {isProcessing ? 'Обработка...' : 'ПОПОЛНИТЬ'}
-                  </Button>
-                </div>
-              </Card>
+                    <div className="text-center">
+                      <div className="text-5xl mb-3">{pkg.icon}</div>
+                      <div className="font-bold text-sm text-muted-foreground mb-2">
+                        {pkg.label}
+                      </div>
+                      <div className="text-2xl font-bold mb-2">
+                        {pkg.coins.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-1">монет</div>
+                      {pkg.bonus && (
+                        <div className="bg-yellow-500 text-white text-xs font-bold py-1 px-2 rounded mb-3">
+                          {pkg.bonus}
+                        </div>
+                      )}
+                      <div className="text-xl font-bold text-primary mb-4">
+                        {pkg.price} ETH
+                      </div>
+                      <Button
+                        onClick={() => handleBuyPackage(pkg)}
+                        disabled={isProcessing}
+                        variant={pkg.bonus ? 'default' : 'outline'}
+                        className="w-full font-bold"
+                      >
+                        {isProcessing && selectedPackage === pkg.coins ? (
+                          <>
+                            <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                            Покупка...
+                          </>
+                        ) : (
+                          'КУПИТЬ'
+                        )}
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
 
               <Card className="p-6 border-2 border-border">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <Icon name="ArrowUpCircle" size={24} />
-                  ВЫВЕСТИ
+                  ВЫВЕСТИ МОНЕТЫ
                 </h2>
                 <div className="space-y-4">
                   <div>
@@ -242,13 +262,13 @@ export default function Wallet({ onNavigate }: WalletProps) {
                     />
                     {withdrawAmount && (
                       <p className="text-sm text-muted-foreground mt-2">
-                        ≈ {(parseFloat(withdrawAmount) / EXCHANGE_RATE).toFixed(6)} ETH
+                        ≈ {(parseFloat(withdrawAmount) / 10000).toFixed(6)} ETH
                       </p>
                     )}
                   </div>
                   <div className="bg-muted p-3 rounded text-sm border-2 border-border">
-                    <div className="font-bold mb-1">Минимальная сумма:</div>
-                    <div>1,000 монет (0.0001 ETH)</div>
+                    <div className="font-bold mb-1">Минимальный вывод:</div>
+                    <div>10,000 монет (0.001 ETH)</div>
                   </div>
                   <Button 
                     onClick={handleWithdraw}
