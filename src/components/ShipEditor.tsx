@@ -6,6 +6,24 @@ import Icon from './ui/icon';
 const BOARD_SIZE = 10;
 const SHIPS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
 
+const getShipSegmentStyle = (board: CellState[][], row: number, col: number): string => {
+  if (board[row][col] !== 'ship') return '';
+  
+  const hasLeft = col > 0 && board[row][col - 1] === 'ship';
+  const hasRight = col < 9 && board[row][col + 1] === 'ship';
+  const hasTop = row > 0 && board[row - 1][col] === 'ship';
+  const hasBottom = row < 9 && board[row + 1][col] === 'ship';
+  
+  if (hasLeft && hasRight) return 'ship-middle-h';
+  if (hasTop && hasBottom) return 'ship-middle-v';
+  if (hasLeft) return 'ship-right';
+  if (hasRight) return 'ship-left';
+  if (hasTop) return 'ship-bottom';
+  if (hasBottom) return 'ship-top';
+  
+  return 'ship-single';
+};
+
 interface ShipEditorProps {
   onSave: (board: CellState[][]) => void;
   initialBoard?: CellState[][];
@@ -149,20 +167,29 @@ export default function ShipEditor({ onSave, initialBoard }: ShipEditorProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-10 gap-1 w-fit mx-auto">
-        {board.map((row, i) => (
-          row.map((cell, j) => (
-            <button
-              key={`${i}-${j}`}
-              onClick={() => handleCellClick(i, j)}
-              className={`w-10 h-10 border-2 font-bold transition-colors ${
-                cell === 'ship'
-                  ? 'bg-primary border-primary text-primary-foreground'
-                  : 'bg-secondary border-border hover:bg-muted'
-              }`}
-            />
-          ))
-        ))}
+      <div className="notebook-board p-4 w-fit mx-auto">
+        <div className="grid grid-cols-10 gap-0">
+          {board.map((row, i) => (
+            row.map((cell, j) => {
+              const shipStyle = cell === 'ship' ? getShipSegmentStyle(board, i, j) : '';
+              return (
+                <button
+                  key={`${i}-${j}`}
+                  onClick={() => handleCellClick(i, j)}
+                  className={`w-9 h-9 border border-blue-200/30 transition-all relative notebook-cell ${
+                    cell === 'ship'
+                      ? 'bg-white'
+                      : 'bg-white hover:bg-blue-50/20'
+                  }`}
+                >
+                  {cell === 'ship' && (
+                    <div className={`ship-segment ${shipStyle}`}></div>
+                  )}
+                </button>
+              );
+            })
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
